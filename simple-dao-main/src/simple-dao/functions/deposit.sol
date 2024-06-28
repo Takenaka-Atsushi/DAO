@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "../storage/Storage.sol";
-import "../CoolVault.sol";
+import { Storage } from "./Storage.sol";
+import { ProtectionBase } from "./ProtectionBase.sol";
+import { CoolVault } from "./CoolVault.sol";
 
-contract DepositFunds {
+contract DepositFunds is ProtectionBase {
     CoolVault public coolVault;
 
     constructor(address _coolVault) {
@@ -12,7 +13,7 @@ contract DepositFunds {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == Storage.owner(), "Caller is not the owner");
+        require(Storage.isOwner(msg.sender), "Caller is not the owner");
         _;
     }
 
@@ -21,7 +22,7 @@ contract DepositFunds {
         _;
     }
 
-    function depositFunds() external onlyOwner notPaused {
+    function depositFunds(uint pid) external onlyOwner notPaused protected(pid) {
         Storage.DAO storage dao = Storage.dao();
         uint amountToDeposit = dao.annualRevenue > 800000 ? dao.annualRevenue - 800000 : 0;
         require(amountToDeposit > 0, "No amount to deposit");
